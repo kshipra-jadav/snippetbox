@@ -2,12 +2,31 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello there. This is the home!")
+	files := []string{
+		"../../ui/html/pages/base.html",
+		"../../ui/html/pages/home.tmpl",
+		"../../ui/html/pages/footer.html",
+	}
+
+	tmpl, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Internal Server Error Parsing The Template File", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.ExecuteTemplate(w, "base", nil); err != nil {
+		log.Print(err)
+		http.Error(w, "Internal Server Error Executing the Template File", http.StatusInternalServerError)
+		return
+	}
 }
 
 func snippetView(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +39,24 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func snippetCreateGet(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "This is form for snippet creation")
+	files := []string{
+		"../../ui/html/pages/base.html",
+		"../../ui/html/pages/create.html",
+		"../../ui/html/pages/footer.html",
+	}
+
+	tmpl, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Internal Server Error Parsing The Template File", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.ExecuteTemplate(w, "base", nil); err != nil {
+		log.Print(err)
+		http.Error(w, "Internal Server Error Executing the Template File", http.StatusInternalServerError)
+		return
+	}
 }
 
 func snippetCreatePost(w http.ResponseWriter, r *http.Request) {
