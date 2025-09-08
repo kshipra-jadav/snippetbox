@@ -3,42 +3,45 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+type App struct {
+	logger *slog.Logger
+}
+
+func (app *App) home(w http.ResponseWriter, r *http.Request) {
 	files := []string{
 		"../../ui/html/pages/base.html",
 		"../../ui/html/pages/home.tmpl",
 		"../../ui/html/pages/footer.html",
 	}
-
+	app.logger.Info("Received request.", "method", r.Method, "URI", r.URL.RequestURI())
 	tmpl, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Print(err)
-		http.Error(w, "Internal Server Error Parsing The Template File", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 
 	if err := tmpl.ExecuteTemplate(w, "base", nil); err != nil {
-		log.Print(err)
-		http.Error(w, "Internal Server Error Executing the Template File", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 }
 
-func snippetView(w http.ResponseWriter, r *http.Request) {
+func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
 	snippetID, err := strconv.Atoi(r.PathValue("snippetID"))
 	if err != nil || snippetID <= 0 {
+		app.logger.Error(err.Error())
 		http.NotFound(w, r)
 		return
 	}
 	fmt.Fprintf(w, "You're viewing snippet number: %v", snippetID)
 }
 
-func snippetCreateGet(w http.ResponseWriter, r *http.Request) {
+func (app *App) snippetCreateGet(w http.ResponseWriter, r *http.Request) {
 	files := []string{
 		"../../ui/html/pages/base.html",
 		"../../ui/html/pages/create.html",
@@ -47,19 +50,19 @@ func snippetCreateGet(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Print(err)
+		app.logger.Error(err.Error(), "method:", r.Method, "URI", r.URL.RequestURI())
 		http.Error(w, "Internal Server Error Parsing The Template File", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tmpl.ExecuteTemplate(w, "base", nil); err != nil {
-		log.Print(err)
+		app.logger.Error(err.Error(), "method:", r.Method, "URI", r.URL.RequestURI())
 		http.Error(w, "Internal Server Error Executing the Template File", http.StatusInternalServerError)
 		return
 	}
 }
 
-func snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+func (app *App) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "Snippet created successfully!")
 }

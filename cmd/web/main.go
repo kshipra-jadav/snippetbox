@@ -1,25 +1,24 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"flag"
+	"log/slog"
 	"net/http"
+	"os"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	addr := flag.String("addr", ":4000", "HTTP Network Address")
 
-	fileServer := http.FileServer(http.Dir("../../ui/static/"))
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
+	flag.Parse()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
 
-	// snippet view, snippet create, snippet create post, home
-	mux.HandleFunc("GET /{$}", home)
-	mux.HandleFunc("GET /snippet/view/{snippetID}", snippetView)
-	mux.HandleFunc("GET /snippet/create", snippetCreateGet)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+	app := App{
+		logger: logger,
+	}
 
-	fmt.Println("Listening on localhost:4000")
-
-	err := http.ListenAndServe(":4000", mux)
-	log.Fatalf("Error : %v", err)
+	logger.Info("Golang server started.", "address", *addr)
+	err := http.ListenAndServe(*addr, app.routes())
+	logger.Error(err.Error())
+	os.Exit(1)
 }
