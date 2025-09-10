@@ -1,8 +1,12 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func (app *App) routes() *http.ServeMux {
+	"github.com/justinas/alice"
+)
+
+func (app *App) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(http.Dir("../../ui/static/"))
@@ -12,5 +16,5 @@ func (app *App) routes() *http.ServeMux {
 	mux.HandleFunc("GET /snippet/create", app.snippetCreateGet)
 	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
 
-	return mux
+	return alice.New(app.recoverPanic, app.logRequest).Then(commonHeaders(mux))
 }
