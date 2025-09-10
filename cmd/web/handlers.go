@@ -11,37 +11,23 @@ import (
 )
 
 type App struct {
-	logger   *slog.Logger
-	snippets *models.SnippetsModel
+	logger        *slog.Logger
+	snippets      *models.SnippetsModel
+	templateCache map[string]*template.Template
 }
 
 func (app *App) home(w http.ResponseWriter, r *http.Request) {
-	// files := []string{
-	// 	"../../ui/html/pages/base.html",
-	// 	"../../ui/html/pages/home.tmpl",
-	// 	"../../ui/html/pages/footer.html",
-	// }
-	// app.logger.Info("Received request.", "method", r.Method, "URI", r.URL.RequestURI())
-	// tmpl, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
-	// }
-
-	// if err := tmpl.ExecuteTemplate(w, "base", nil); err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
-	// }
-
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n\n", snippet)
+	data := templateData{
+		Snippets: snippets,
 	}
+
+	app.render(w, r, http.StatusOK, "home.html", data)
 }
 
 func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +43,11 @@ func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+	data := templateData{
+		Snippet: snippet,
+	}
+
+	app.render(w, r, http.StatusOK, "view.html", data)
 }
 
 func (app *App) snippetCreateGet(w http.ResponseWriter, r *http.Request) {

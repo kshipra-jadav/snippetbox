@@ -14,8 +14,8 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP Network Address")
-
 	flag.Parse()
+
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
 
 	db, err := openDB("root:root@/snippetbox?parseTime=true")
@@ -25,9 +25,16 @@ func main() {
 	}
 	defer db.Close()
 
+	templateCache, err := cacheNewTemplate()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := App{
-		logger:   logger,
-		snippets: &models.SnippetsModel{DB: db},
+		logger:        logger,
+		snippets:      &models.SnippetsModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	logger.Info("Golang server started.", "address", *addr)
