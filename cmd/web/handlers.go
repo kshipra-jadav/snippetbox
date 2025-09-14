@@ -7,16 +7,18 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	"github.com/kshipra-jadav/snippetbox/internal/models"
 	"github.com/kshipra-jadav/snippetbox/internal/validator"
 )
 
 type App struct {
-	logger        *slog.Logger
-	snippets      *models.SnippetsModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	logger         *slog.Logger
+	snippets       *models.SnippetsModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 type snippetCreateForm struct {
@@ -53,8 +55,11 @@ func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	flashMsg := app.sessionManager.GetString(r.Context(), "flash")
+
 	data := templateData{
 		Snippet: snippet,
+		Flash:   flashMsg,
 	}
 
 	app.render(w, r, http.StatusOK, "view.html", data)
@@ -104,6 +109,8 @@ func (app *App) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
+
+	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("Snippet with ID: %v, written successfully.", lastID))
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%v", lastID), http.StatusSeeOther)
 }

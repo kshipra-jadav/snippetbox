@@ -7,7 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kshipra-jadav/snippetbox/internal/models"
@@ -33,11 +36,16 @@ func main() {
 	}
 	decoder := form.NewDecoder()
 
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := App{
-		logger:        logger,
-		snippets:      &models.SnippetsModel{DB: db},
-		templateCache: templateCache,
-		formDecoder:   decoder,
+		logger:         logger,
+		snippets:       &models.SnippetsModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    decoder,
+		sessionManager: sessionManager,
 	}
 
 	logger.Info("Golang server started.", "address", *addr)
