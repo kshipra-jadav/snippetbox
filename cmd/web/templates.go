@@ -11,6 +11,7 @@ import (
 type templateData struct {
 	Snippet  models.Snippet
 	Snippets []models.Snippet
+	Form     any
 }
 
 func humanDate(t time.Time) string {
@@ -35,6 +36,7 @@ func cacheNewTemplate() (map[string]*template.Template, error) {
 		files := []string{
 			"../../ui/html/pages/base.html",
 			"../../ui/html/pages/footer.html",
+			"../../ui/html/pages/nav.html",
 			page,
 		}
 

@@ -7,13 +7,23 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/form/v4"
 	"github.com/kshipra-jadav/snippetbox/internal/models"
+	"github.com/kshipra-jadav/snippetbox/internal/validator"
 )
 
 type App struct {
 	logger        *slog.Logger
 	snippets      *models.SnippetsModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
+}
+
+type snippetCreateForm struct {
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 func (app *App) home(w http.ResponseWriter, r *http.Request) {
@@ -51,35 +61,49 @@ func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) snippetCreateGet(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"../../ui/html/pages/base.html",
-		"../../ui/html/pages/create.html",
-		"../../ui/html/pages/footer.html",
+	data := templateData{}
+	data.Form = snippetCreateForm{
+		Expires: 365,
 	}
-
-	tmpl, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	if err := tmpl.ExecuteTemplate(w, "base", nil); err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	app.render(w, r, http.StatusOK, "create.html", data)
 }
 
 func (app *App) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
-
-	lastID, err := app.snippets.Insert(title, content, expires)
+	err := r.ParseForm()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Snippet with id: %v - Created Successfully!", lastID)
+	var myForm snippetCreateForm
+
+	err = app.formDecoder.Decode(&myForm, r.PostForm)
+	if err != nil {
+		fmt.Println("LMAOOOOO")
+		app.serverError(w, r, err)
+		return
+	}
+
+	myForm.CheckField(validator.NotBlank(myForm.Title), "title", "Title field cannot be blank.")
+	myForm.CheckField(validator.MaxChars(myForm.Title, 100), "title", "Title field has to be less than 100 chars.")
+
+	myForm.CheckField(validator.NotBlank(myForm.Content), "content", "Content field cannot be blank")
+
+	myForm.CheckField(validator.PermittedValue(myForm.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365.")
+
+	fmt.Println("fieldErrors", myForm.FieldErrors)
+
+	if !myForm.Valid() {
+		data := templateData{Form: myForm}
+		app.render(w, r, http.StatusUnprocessableEntity, "create.html", data)
+		return
+	}
+
+	lastID, err := app.snippets.Insert(myForm.Title, myForm.Content, myForm.Expires)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%v", lastID), http.StatusSeeOther)
 }

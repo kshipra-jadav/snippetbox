@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kshipra-jadav/snippetbox/internal/models"
 )
@@ -30,11 +31,13 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+	decoder := form.NewDecoder()
 
 	app := App{
 		logger:        logger,
 		snippets:      &models.SnippetsModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   decoder,
 	}
 
 	logger.Info("Golang server started.", "address", *addr)
