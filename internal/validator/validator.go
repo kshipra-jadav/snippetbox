@@ -1,17 +1,19 @@
 package validator
 
 import (
+	"net/mail"
 	"slices"
 	"strings"
 	"unicode/utf8"
 )
 
 type Validator struct {
-	FieldErrors map[string]string
+	FieldErrors    map[string]string
+	NonFieldErrors []string
 }
 
 func (v *Validator) Valid() bool {
-	return len(v.FieldErrors) == 0
+	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
 }
 
 func (v *Validator) AddFieldError(key, message string) {
@@ -30,6 +32,10 @@ func (v *Validator) CheckField(ok bool, key, message string) {
 	}
 }
 
+func (v *Validator) AddNonFieldError(message string) {
+	v.NonFieldErrors = append(v.NonFieldErrors, message)
+}
+
 func NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
 }
@@ -40,4 +46,13 @@ func MaxChars(value string, numChars int) bool {
 
 func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 	return slices.Contains(permittedValues, value)
+}
+
+func ValidEmail(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
+}
+
+func MinChars(value string, numChars int) bool {
+	return utf8.RuneCountInString(value) >= numChars
 }

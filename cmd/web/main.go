@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -17,6 +18,15 @@ import (
 	"github.com/kshipra-jadav/snippetbox/internal/models"
 )
 
+type App struct {
+	logger         *slog.Logger
+	snippets       *models.SnippetsModel
+	users          *models.UsersModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
+}
+
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP Network Address")
 	flag.Parse()
@@ -28,7 +38,13 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			logger.Error(err.Error())
+			os.Exit(1)
+		}
+	}(db)
 
 	templateCache, err := cacheNewTemplate()
 	if err != nil {
@@ -44,6 +60,7 @@ func main() {
 	app := App{
 		logger:         logger,
 		snippets:       &models.SnippetsModel{DB: db},
+		users:          &models.UsersModel{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    decoder,
 		sessionManager: sessionManager,

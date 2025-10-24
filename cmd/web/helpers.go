@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -36,4 +37,15 @@ func (app *App) render(w http.ResponseWriter, r *http.Request, status int, page 
 	w.WriteHeader(status)
 	buf.WriteTo(w)
 
+}
+
+func (app *App) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r.Context()),
+	}
+}
+
+func (app *App) isAuthenticated(ctx context.Context) bool {
+	return app.sessionManager.Exists(ctx, "authenticatedUserId")
 }
