@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
@@ -58,5 +59,31 @@ func (app *App) requireAuthentication(next http.Handler) http.Handler {
 		w.Header().Add("Cache-Control", "no-store")
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *App) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// get the userid from the session storage
+		userID := app.sessionManager.GetInt(r.Context(), "isAuthenticated")
+
+		// userID will only be 0 if key is not found i.e. no user has been set
+		if userID == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// check if the user exists
+		exists, err := app.users.Exists(userID)
+		if err != nil {
+			app.serverError(w, r, err)
+		}
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedKey, true)
+			r = r.WithContext(ctx)
+		}
+
+		next.ServeHTTP(w, r)
+
 	})
 }
