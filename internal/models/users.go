@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -55,6 +56,7 @@ func (model *UsersModel) Authenticate(email, password string) (int, error) {
 
 	err := row.Scan(&usrId, &hashedPassword)
 	if err != nil {
+		fmt.Print("err no recs")
 		return 0, ErrNoRecords
 	}
 
@@ -71,10 +73,23 @@ func (model *UsersModel) Exists(id int) (bool, error) {
 
 	stmt := `SELECT EXISTS(SELECT 1 FROM users where id = ?)`
 
-	err := model.DB.QueryRow(stmt).Scan(&exists)
+	err := model.DB.QueryRow(stmt, id).Scan(&exists)
 	if err != nil {
 		return false, ErrNoRecords
 	}
 
 	return exists, nil
+}
+
+func (model *UsersModel) Get(id int) (User, error) {
+	stmt := `SELECT id, name, email, created FROM users WHERE id = ?`
+
+	info := User{}
+	err := model.DB.QueryRow(stmt, id).Scan(&info.ID, &info.Name, &info.Email, &info.Created)
+	if err != nil {
+		return User{}, ErrNoRecords
+	}
+
+	return info, nil
+
 }

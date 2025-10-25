@@ -249,3 +249,16 @@ func (app *App) about(w http.ResponseWriter, r *http.Request) {
 
 	app.render(w, r, http.StatusOK, "about.gohtml", data)
 }
+
+func (app *App) userView(w http.ResponseWriter, r *http.Request) {
+	userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserId")
+	userInfo, err := app.users.Get(userID)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data := app.newTemplateData(r)
+	data.User = userInfo
+	app.render(w, r, http.StatusOK, "info.gohtml", data)
+	return
+}

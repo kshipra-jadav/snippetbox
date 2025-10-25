@@ -65,7 +65,7 @@ func (app *App) requireAuthentication(next http.Handler) http.Handler {
 func (app *App) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// get the userid from the session storage
-		userID := app.sessionManager.GetInt(r.Context(), "isAuthenticated")
+		userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserId")
 
 		// userID will only be 0 if key is not found i.e. no user has been set
 		if userID == 0 {
