@@ -64,7 +64,6 @@ func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) snippetCreateGet(w http.ResponseWriter, r *http.Request) {
-	app.logger.Info("isAuthenticated --- >", "auth status", app.isAuthenticated(r.Context()))
 	data := app.newTemplateData(r)
 	data.Form = snippetCreateForm{
 		Expires: 365,

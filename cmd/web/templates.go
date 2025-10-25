@@ -1,7 +1,9 @@
 package main
 
 import (
+	"github.com/kshipra-jadav/snippetbox/ui"
 	"html/template"
+	"io/fs"
 	"path/filepath"
 	"time"
 
@@ -27,7 +29,7 @@ var templateFunctions = template.FuncMap{
 func cacheNewTemplate() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
-	pages, err := filepath.Glob("../../ui/html/pages/*.html")
+	pages, err := fs.Glob(ui.Files, "html/pages/*.html")
 	if err != nil {
 		return nil, err
 	}
@@ -36,13 +38,13 @@ func cacheNewTemplate() (map[string]*template.Template, error) {
 		baseName := filepath.Base(page)
 
 		files := []string{
-			"../../ui/html/pages/base.html",
-			"../../ui/html/pages/footer.html",
-			"../../ui/html/pages/nav.html",
+			"html/pages/base.html",
+			"html/pages/footer.html",
+			"html/pages/nav.html",
 			page,
 		}
 
-		tmpl, err := template.New(baseName).Funcs(templateFunctions).ParseFiles(files...)
+		tmpl, err := template.New(baseName).Funcs(templateFunctions).ParseFS(ui.Files, files...)
 		if err != nil {
 			return nil, err
 		}
