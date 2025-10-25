@@ -29,7 +29,7 @@ var templateFunctions = template.FuncMap{
 func cacheNewTemplate() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
-	pages, err := fs.Glob(ui.Files, "html/pages/*.html")
+	pages, err := fs.Glob(ui.Files, "html/pages/*.gohtml")
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +38,9 @@ func cacheNewTemplate() (map[string]*template.Template, error) {
 		baseName := filepath.Base(page)
 
 		files := []string{
-			"html/pages/base.html",
-			"html/pages/footer.html",
-			"html/pages/nav.html",
+			"html/pages/base.gohtml",
+			"html/pages/footer.gohtml",
+			"html/pages/nav.gohtml",
 			page,
 		}
 

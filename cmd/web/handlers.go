@@ -39,7 +39,7 @@ func (app *App) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Snippets = snippets
 
-	app.render(w, r, http.StatusOK, "home.html", data)
+	app.render(w, r, http.StatusOK, "home.gohtml", data)
 }
 
 func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +60,7 @@ func (app *App) snippetView(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
 
-	app.render(w, r, http.StatusOK, "view.html", data)
+	app.render(w, r, http.StatusOK, "view.gohtml", data)
 }
 
 func (app *App) snippetCreateGet(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +68,7 @@ func (app *App) snippetCreateGet(w http.ResponseWriter, r *http.Request) {
 	data.Form = snippetCreateForm{
 		Expires: 365,
 	}
-	app.render(w, r, http.StatusOK, "create.html", data)
+	app.render(w, r, http.StatusOK, "create.gohtml", data)
 }
 
 func (app *App) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (app *App) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	if !myForm.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = myForm
-		app.render(w, r, http.StatusUnprocessableEntity, "create.html", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "create.gohtml", data)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (app *App) userSignupGet(w http.ResponseWriter, r *http.Request) {
 
 	data.Form = userSignupForm{}
 
-	app.render(w, r, http.StatusOK, "signup.html", data)
+	app.render(w, r, http.StatusOK, "signup.gohtml", data)
 
 }
 
@@ -144,7 +144,7 @@ func (app *App) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	if !signupForm.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = signupForm
-		app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 		return
 	}
 
@@ -154,7 +154,7 @@ func (app *App) userSignupPost(w http.ResponseWriter, r *http.Request) {
 			signupForm.AddFieldError("email", "Email already in use")
 			data := app.newTemplateData(r)
 			data.Form = signupForm
-			app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
+			app.render(w, r, http.StatusUnprocessableEntity, "signup.gohtml", data)
 			return
 		} else {
 			app.serverError(w, r, err)
@@ -173,7 +173,7 @@ func (app *App) userLoginGet(w http.ResponseWriter, r *http.Request) {
 
 	data.Form = userSignupForm{}
 
-	app.render(w, r, http.StatusOK, "login.html", data)
+	app.render(w, r, http.StatusOK, "login.gohtml", data)
 }
 
 func (app *App) userLoginPost(w http.ResponseWriter, r *http.Request) {
@@ -197,7 +197,7 @@ func (app *App) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	if !loginForm.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = loginForm
-		app.render(w, r, http.StatusUnprocessableEntity, "login.html", data)
+		app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 		return
 	}
 
@@ -207,13 +207,13 @@ func (app *App) userLoginPost(w http.ResponseWriter, r *http.Request) {
 			loginForm.AddNonFieldError("No user found with this email. Please try again.")
 			data := app.newTemplateData(r)
 			data.Form = loginForm
-			app.render(w, r, http.StatusUnprocessableEntity, "login.html", data)
+			app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 			return
 		} else if errors.Is(err, models.ErrInvalidCredentials) {
 			loginForm.AddNonFieldError("Invalid username or password. Please try again")
 			data := app.newTemplateData(r)
 			data.Form = loginForm
-			app.render(w, r, http.StatusUnprocessableEntity, "login.html", data)
+			app.render(w, r, http.StatusUnprocessableEntity, "login.gohtml", data)
 			return
 		} else {
 			app.serverError(w, r, err)
@@ -242,4 +242,10 @@ func (app *App) userLogout(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Remove(r.Context(), "authenticatedUserId")
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *App) about(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	app.render(w, r, http.StatusOK, "about.gohtml", data)
 }
