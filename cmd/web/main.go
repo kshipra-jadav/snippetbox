@@ -25,10 +25,12 @@ type App struct {
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
+	debugMode      bool
 }
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP Network Address")
+	debugMode := flag.Bool("debug", false, "Enable/Disable Debug Mode")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{}))
@@ -64,6 +66,7 @@ func main() {
 		templateCache:  templateCache,
 		formDecoder:    decoder,
 		sessionManager: sessionManager,
+		debugMode:      *debugMode,
 	}
 
 	server := &http.Server{
@@ -79,6 +82,9 @@ func main() {
 	}
 
 	logger.Info("Golang server started.", "address", server.Addr)
+	if app.debugMode {
+		logger.Info("Application Running in deubg mode!")
+	}
 	err = server.ListenAndServeTLS("../../tls/cert.pem", "../../tls/key.pem")
 	logger.Error(err.Error())
 	os.Exit(1)

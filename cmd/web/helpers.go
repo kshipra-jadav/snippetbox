@@ -9,8 +9,17 @@ import (
 )
 
 func (app *App) serverError(w http.ResponseWriter, r *http.Request, err error) {
-	fmt.Println(string(debug.Stack()))
-	app.logger.Error(err.Error(), "method:", r.Method, "URI", r.URL.RequestURI())
+	var (
+		method = r.Method
+		uri    = r.URL.RequestURI()
+		trace  = string(debug.Stack())
+	)
+	app.logger.Error(err.Error(), "method:", method, "URI", uri)
+	if app.debugMode {
+		body := fmt.Sprintf("%s\n%s", err.Error(), trace)
+		http.Error(w, body, http.StatusInternalServerError)
+		return
+	}
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
